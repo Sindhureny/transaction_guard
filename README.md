@@ -1,10 +1,16 @@
 # 🛡️ Transaction Guard
 
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Online%20Dashboard-success?style=for-the-badge&logo=google-chrome&logoColor=white)](https://sindhureny.github.io/transaction_guard/)
 [![CI](https://github.com/Sindhureny/transaction_guard/actions/workflows/ci.yml/badge.svg)](https://github.com/Sindhureny/transaction_guard/actions/workflows/ci.yml)
+[![Pages Deployment](https://github.com/Sindhureny/transaction_guard/actions/workflows/pages.yml/badge.svg)](https://github.com/Sindhureny/transaction_guard/actions/workflows/pages.yml)
 [![Database](https://img.shields.io/badge/Database-Exasol%20In--Memory%20OLAP-007ACC?style=flat&logo=database)](https://www.exasol.com/)
 [![SQL](https://img.shields.io/badge/SQL-ANSI%20%26%20Exasol%20Dialect-orange?style=flat&logo=postgresql)](https://docs.exasol.com/)
 [![Python](https://img.shields.io/badge/Python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13-blue?style=flat&logo=python)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+> 🌐 **Live Interactive Web Application**:  
+> Experience real-time suspicious transaction scoring, scenario sandbox simulation, and Exasol SQL analytics directly in your browser:  
+> 👉 **[https://sindhureny.github.io/transaction_guard/](https://sindhureny.github.io/transaction_guard/)**
 
 **Transaction Guard** is an in-memory SQL detection engine built for **Exasol** (and standard ANSI SQL engines) to identify, score, and prioritize suspicious financial transactions.
 
@@ -58,7 +64,12 @@ flowchart TD
 transaction_guard/
 ├── .github/
 │   └── workflows/
-│       └── ci.yml                     # Automated GitHub Actions test pipeline
+│       ├── ci.yml                     # Automated GitHub Actions test pipeline
+│       └── pages.yml                  # Automated GitHub Pages deployment pipeline
+├── docs/                              # Live Interactive Web Dashboard & Simulator
+│   ├── index.html                     # Responsive UI, KPI grid, ledger & explorer
+│   ├── styles.css                     # Dark fintech cyber-intelligence design system
+│   └── app.js                         # In-memory window heuristics & UI controller
 ├── sql/
 │   ├── 01_schema_and_tables.sql      # Schema & table DDL with constraints
 │   ├── 02_detection_views.sql        # Core analytic views & scoring models
@@ -70,6 +81,7 @@ transaction_guard/
 │   └── run_demo.py                   # Live CLI interactive demonstration
 ├── tests/
 │   └── test_transaction_guard.py     # Automated unit test suite (100% pass)
+├── TransactionGuard.pptx              # Project slide deck (Money, Risk & Regulation)
 ├── transaction_guard_exasol.sql      # Root convenience copy of master SQL script
 ├── .gitignore
 ├── LICENSE                            # MIT License
@@ -178,6 +190,7 @@ python -m unittest discover -s tests -p "test_*.py" -v
 2. **Idempotent Benchmark Data**: Added `TRUNCATE TABLE` before inserts so re-executing demo scripts does not corrupt existing partitions with synthetic duplicates.
 3. **Enterprise Analytic Views**: Packaged ad-hoc CTE queries into reusable views (`V_SUSPICIOUS_TRANSACTIONS`, `V_RISK_SUMMARY`, `V_ACCOUNT_RISK_PROFILE`, `V_MERCHANT_RISK_PROFILE`).
 4. **Automated CI/CD**: Added a GitHub Actions workflow testing Python 3.10 through 3.13 on every commit.
+5. **Interactive Web Dashboard & Scenario Simulator**: Designed and deployed a real-time compliance investigation dashboard with interactive scenario simulations, window heuristic breakdown, and SQL explorer hosted live on GitHub Pages.
 
 ---
 

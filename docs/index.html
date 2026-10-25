@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Transaction Guard | In-Memory Suspicious Financial Transaction Detection Engine</title>
+  <meta name="description" content="Real-time in-memory suspicious financial transaction detection engine built for Exasol OLAP and ANSI SQL. Uses analytic window functions to detect duplicate charges, high-value anomalies, and velocity bursts.">
+  <meta name="keywords" content="Exasol, fraud detection, SQL window functions, transaction guard, financial analytics, compliance, money laundering, risk scoring">
+  <meta name="author" content="Sindhureny S, Yashwanthiga G, TarunShree M">
+  
+  <!-- Favicon SVG -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛡️</text></svg>">
+
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <div class="app-container">
+    <!-- Top Header -->
+    <header class="top-header">
+      <div class="brand-section">
+        <div class="brand-icon">🛡️</div>
+        <div class="brand-text">
+          <h1>
+            Transaction Guard
+            <span class="badge-tag">Exasol OLAP</span>
+          </h1>
+          <p>Real-Time In-Memory Suspicious Transaction Detection Engine & Compliance Dashboard</p>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <div class="live-indicator">
+          <div class="pulse-dot"></div>
+          <span>Engine Active</span>
+        </div>
+        <a href="https://github.com/Sindhureny/transaction_guard" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+          GitHub Repository
+        </a>
+      </div>
+    </header>
+
+    <!-- Executive KPI Grid -->
+    <section class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <span class="kpi-title">Total Processed</span>
+          <span class="kpi-icon">📊</span>
+        </div>
+        <div class="kpi-value" id="kpiTotalTxns">0</div>
+        <div class="kpi-subtitle">In-memory ledger count</div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <span class="kpi-title">Total Volume</span>
+          <span class="kpi-icon">💳</span>
+        </div>
+        <div class="kpi-value" id="kpiTotalVolume">$0.00</div>
+        <div class="kpi-subtitle">Gross processed amount</div>
+      </div>
+
+      <div class="kpi-card critical">
+        <div class="kpi-header">
+          <span class="kpi-title">Under Review</span>
+          <span class="kpi-icon">🚨</span>
+        </div>
+        <div class="kpi-value" id="kpiFlaggedTxns" style="color: var(--crit-color);">0 (0%)</div>
+        <div class="kpi-subtitle">Transactions flagged for human review</div>
+      </div>
+
+      <div class="kpi-card high">
+        <div class="kpi-header">
+          <span class="kpi-title">Volume at Risk</span>
+          <span class="kpi-icon">⚠️</span>
+        </div>
+        <div class="kpi-value" id="kpiFlaggedVol" style="color: var(--high-color);">$0.00 (0%)</div>
+        <div class="kpi-subtitle">Total financial exposure</div>
+      </div>
+
+      <div class="kpi-card normal">
+        <div class="kpi-header">
+          <span class="kpi-title">Clean Volume</span>
+          <span class="kpi-icon">✅</span>
+        </div>
+        <div class="kpi-value" id="kpiNormalVol" style="color: var(--norm-color);">$0.00 (0%)</div>
+        <div class="kpi-subtitle">Straight-through cleared</div>
+      </div>
+
+      <div class="kpi-card medium">
+        <div class="kpi-header">
+          <span class="kpi-title">Active Anomalies</span>
+          <span class="kpi-icon">⚡</span>
+        </div>
+        <div class="kpi-value" id="kpiActiveTriggers" style="color: var(--med-color);">0</div>
+        <div class="kpi-subtitle">High/Critical heuristic triggers</div>
+      </div>
+    </section>
+
+    <!-- Navigation Tabs -->
+    <nav class="nav-tabs" aria-label="Main Dashboard Tabs">
+      <button class="tab-btn active" data-target="tabLedger">
+        <span>📋</span> Live Review Queue
+      </button>
+      <button class="tab-btn" data-target="tabSimulator">
+        <span>🧪</span> Sandbox & Scenario Simulator
+      </button>
+      <button class="tab-btn" data-target="tabProfiles">
+        <span>👥</span> Account & Merchant Intelligence
+      </button>
+      <button class="tab-btn" data-target="tabSql">
+        <span>💻</span> Exasol SQL Explorer
+      </button>
+      <button class="tab-btn" data-target="tabArch">
+        <span>🏛️</span> Architecture & Project Overview
+      </button>
+    </nav>
+
+    <!-- TAB 1: LIVE REVIEW QUEUE & LEDGER -->
+    <main id="tabLedger" class="tab-content active">
+      <div class="table-panel">
+        <div class="table-toolbar">
+          <div class="search-box">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="searchInput" class="search-input" placeholder="Search by Txn ID, Account, Merchant, Reason...">
+          </div>
+
+          <div class="filter-group">
+            <select id="filterSeverity" class="select-input" aria-label="Filter by Severity">
+              <option value="ALL">All Severities</option>
+              <option value="REVIEW">Only Review Queue</option>
+              <option value="CRITICAL">Critical Tier (Score ≥ 65)</option>
+              <option value="HIGH">High Tier (Score ≥ 35)</option>
+              <option value="MEDIUM">Medium Tier (Score ≥ 25)</option>
+              <option value="NORMAL">Normal / Cleared (Score = 0)</option>
+            </select>
+
+            <select id="filterRule" class="select-input" aria-label="Filter by Detection Rule">
+              <option value="ALL">All Detection Rules</option>
+              <option value="DUP">Rule 1: Duplicate Charges</option>
+              <option value="HIGH">Rule 2: High-Value Anomaly</option>
+              <option value="VEL">Rule 3: Daily Velocity Bursts</option>
+              <option value="CLEAN">Rule 0: No Rules Triggered</option>
+            </select>
+
+            <button class="btn btn-secondary btn-sm" onclick="exportReviewQueueCSV()">
+              📥 Export CSV
+            </button>
+            <button class="btn btn-secondary btn-sm" onclick="exportAuditJSON()">
+              📄 Export JSON
+            </button>
+            <button class="btn btn-outline btn-sm" onclick="resetBaseline()">
+              🔄 Reset Demo Data
+            </button>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="data-table" id="ledgerTable">
+            <thead>
+              <tr>
+                <th>Txn ID</th>
+                <th>Account ID</th>
+                <th>Timestamp</th>
+                <th>Merchant</th>
+                <th>Amount ($)</th>
+                <th>Risk Score</th>
+                <th>Severity</th>
+                <th>Status</th>
+                <th>Heuristic Inspection</th>
+              </tr>
+            </thead>
+            <tbody id="ledgerTableBody">
+              <!-- Dynamically populated by app.js -->
+            </tbody>
+          </table>
+        </div>
+
+        <div style="padding: 12px 20px; font-size: 0.78rem; color: var(--text-dim); display: flex; justify-content: space-between; border-top: 1px solid var(--border-subtle);">
+          <span id="tableCountDisplay">Loading ledger...</span>
+          <span>Detection Engine: In-Memory SQL Window Functions</span>
+        </div>
+      </div>
+    </main>
+
+    <!-- TAB 2: SANDBOX & TRANSACTION SIMULATOR -->
+    <section id="tabSimulator" class="tab-content">
+      <div class="simulator-layout">
+        <!-- Input Form & Presets -->
+        <div class="panel-card">
+          <h2 class="panel-title"><span>🧪</span> Interactive Transaction Simulator</h2>
+          <p class="panel-desc">Test custom transactions or trigger multi-rule compound attack simulations against the live heuristic engine.</p>
+
+          <label class="form-label">Pre-Engineered Test Scenarios</label>
+          <div class="presets-grid">
+            <button class="preset-card" onclick="loadPreset('baseline')">
+              <div class="preset-icon">📌</div>
+              <span class="preset-title">Baseline Benchmark</span>
+              <span class="preset-sub">Standard 9 transactions</span>
+            </button>
+            <button class="preset-card" onclick="loadPreset('high_value')">
+              <div class="preset-icon">💎</div>
+              <span class="preset-title">High-Value Spike</span>
+              <span class="preset-sub">Breaches $25,000 threshold</span>
+            </button>
+            <button class="preset-card" onclick="loadPreset('duplicate_attack')">
+              <div class="preset-icon">👥</div>
+              <span class="preset-title">Duplicate Burst</span>
+              <span class="preset-sub">Same Acc, Amt & Merchant</span>
+            </button>
+            <button class="preset-card" onclick="loadPreset('velocity_burst')">
+              <div class="preset-icon">⚡</div>
+              <span class="preset-title">Velocity Burst</span>
+              <span class="preset-sub">≥ 4 txns in same day</span>
+            </button>
+            <button class="preset-card" onclick="loadPreset('compound_threat')">
+              <div class="preset-icon">🚨</div>
+              <span class="preset-title">Compound Critical</span>
+              <span class="preset-sub">Duplicate + High Value (Score 75)</span>
+            </button>
+            <button class="preset-card" onclick="loadPreset('clean_only')">
+              <div class="preset-icon">✅</div>
+              <span class="preset-title">Benign Batch</span>
+              <span class="preset-sub">Straight-through cleared</span>
+            </button>
+          </div>
+
+          <div style="border-top: 1px solid var(--border-subtle); padding-top: 20px; margin-top: 10px;">
+            <label class="form-label">Evaluate Custom Transaction</label>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label" for="simAccount">Account ID</label>
+                <input type="text" id="simAccount" class="form-input" value="ACC103" placeholder="e.g. ACC103">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="simAmount">Amount ($ USD)</label>
+                <input type="number" id="simAmount" class="form-input" value="450.00" step="0.01" placeholder="450.00">
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label" for="simMerchant">Merchant Terminal</label>
+                <input type="text" id="simMerchant" class="form-input" value="Cafe" placeholder="e.g. Cafe">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="simDateTime">Timestamp</label>
+                <input type="text" id="simDateTime" class="form-input" value="2026-10-25 10:15:00">
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 12px; margin-top: 8px;">
+              <button class="btn btn-primary" onclick="addSimulatedTransaction()">
+                ➕ Commit to Active Ledger
+              </button>
+              <button class="btn btn-outline" onclick="resetBaseline()">
+                🔄 Reset
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Real-Time Evaluation Result -->
+        <div class="panel-card">
+          <h2 class="panel-title"><span>🎯</span> Real-Time Heuristic Adjudication</h2>
+          <p class="panel-desc">Calculated dynamically by partitioning across active ledger windows.</p>
+
+          <div class="eval-result-card">
+            <div class="eval-result-header">
+              <div class="eval-score-ring">
+                <div class="eval-score-number" id="simScoreVal">0</div>
+                <div>
+                  <div style="font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase;">Composite Score</div>
+                  <div style="font-size: 0.85rem; font-weight: 600;">Out of 100 max pts</div>
+                </div>
+              </div>
+
+              <div style="text-align: right;">
+                <div><span id="simSeverityBadge" class="badge-severity normal">NORMAL</span></div>
+                <div style="margin-top: 6px;"><span id="simStatusBadge" class="badge-status normal">NORMAL</span></div>
+              </div>
+            </div>
+
+            <div class="heuristic-breakdown">
+              <div class="heuristic-item">
+                <div class="heuristic-name">
+                  <span>👥</span>
+                  <div>
+                    <strong>Rule 1: Duplicate Match Partition</strong><br/>
+                    <span style="font-size: 0.72rem; color: var(--text-dim);">Same Account, Amount & Merchant</span>
+                  </div>
+                </div>
+                <div style="font-family: var(--font-mono); font-size: 0.82rem;" id="simDupMatch">0 matches</div>
+              </div>
+
+              <div class="heuristic-item">
+                <div class="heuristic-name">
+                  <span>💎</span>
+                  <div>
+                    <strong>Rule 2: High-Value Threshold</strong><br/>
+                    <span style="font-size: 0.72rem; color: var(--text-dim);">Amount ≥ $25,000.00</span>
+                  </div>
+                </div>
+                <div style="font-family: var(--font-mono); font-size: 0.82rem;" id="simHighMatch">Under threshold</div>
+              </div>
+
+              <div class="heuristic-item">
+                <div class="heuristic-name">
+                  <span>⚡</span>
+                  <div>
+                    <strong>Rule 3: Daily Activity Velocity</strong><br/>
+                    <span style="font-size: 0.72rem; color: var(--text-dim);">≥ 4 Transactions on same date</span>
+                  </div>
+                </div>
+                <div style="font-family: var(--font-mono); font-size: 0.82rem;" id="simVelMatch">0 in day</div>
+              </div>
+            </div>
+
+            <div style="margin-top: 16px; padding: 12px; background: rgba(0,0,0,0.3); border-radius: var(--radius-sm);">
+              <div style="font-size: 0.72rem; color: var(--text-dim); text-transform: uppercase;">Adjudication Reasons</div>
+              <div id="simReasonDisplay" style="font-size: 0.85rem; color: #38bdf8; font-weight: 500; margin-top: 4px;">
+                No rule triggered
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 3: ACCOUNT & MERCHANT RISK PROFILES -->
+    <section id="tabProfiles" class="tab-content">
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+        <!-- Account Profiles -->
+        <div class="table-panel">
+          <div style="padding: 18px 20px; border-bottom: 1px solid var(--border-subtle);">
+            <h3 style="font-size: 1.05rem; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+              <span>👤</span> Account Exposure Profiles (V_ACCOUNT_RISK_PROFILE)
+            </h3>
+            <p style="font-size: 0.78rem; color: var(--text-muted); margin-top: 4px;">Aggregated exposure, flagged volume, and maximum risk score per account.</p>
+          </div>
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Account ID</th>
+                  <th>Total Txns</th>
+                  <th>Flagged</th>
+                  <th>Total Volume</th>
+                  <th>Volume at Risk</th>
+                  <th>Max Score</th>
+                </tr>
+              </thead>
+              <tbody id="accountProfileBody">
+                <!-- Populated by JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Merchant Profiles -->
+        <div class="table-panel">
+          <div style="padding: 18px 20px; border-bottom: 1px solid var(--border-subtle);">
+            <h3 style="font-size: 1.05rem; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+              <span>🏬</span> Merchant Risk Intelligence (V_MERCHANT_RISK_PROFILE)
+            </h3>
+            <p style="font-size: 0.78rem; color: var(--text-muted); margin-top: 4px;">Terminal exposure, duplicate billing alerts, and suspicious transaction volumes.</p>
+          </div>
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Merchant</th>
+                  <th>Transactions</th>
+                  <th>Flagged</th>
+                  <th>Duplicates</th>
+                  <th>Gross Volume</th>
+                </tr>
+              </thead>
+              <tbody id="merchantProfileBody">
+                <!-- Populated by JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 4: EXASOL SQL EXPLORER -->
+    <section id="tabSql" class="tab-content">
+      <div class="sql-container">
+        <aside class="sql-sidebar">
+          <span style="font-size: 0.75rem; font-weight: 700; color: var(--text-dim); text-transform: uppercase; margin-bottom: 6px; padding: 0 8px;">Views & Scripts</span>
+          <button class="sql-nav-item active" onclick="selectSqlTab('v_suspicious', this)">
+            <span>V_SUSPICIOUS_TRANSACTIONS</span>
+            <span style="font-size: 0.7rem; opacity: 0.6;">Core</span>
+          </button>
+          <button class="sql-nav-item" onclick="selectSqlTab('v_summary', this)">
+            <span>V_RISK_SUMMARY</span>
+            <span style="font-size: 0.7rem; opacity: 0.6;">KPIs</span>
+          </button>
+          <button class="sql-nav-item" onclick="selectSqlTab('v_account', this)">
+            <span>V_ACCOUNT_RISK_PROFILE</span>
+            <span style="font-size: 0.7rem; opacity: 0.6;">Accounts</span>
+          </button>
+          <button class="sql-nav-item" onclick="selectSqlTab('v_query', this)">
+            <span>PRIORITY REVIEW QUEUE</span>
+            <span style="font-size: 0.7rem; opacity: 0.6;">Query</span>
+          </button>
+          <button class="sql-nav-item" onclick="selectSqlTab('full_script', this)">
+            <span>transaction_guard_exasol.sql</span>
+            <span style="font-size: 0.7rem; opacity: 0.6;">Master</span>
+          </button>
+        </aside>
+
+        <div class="sql-code-panel">
+          <div class="sql-code-header">
+            <span class="sql-code-title" id="sqlSnippetTitle">V_SUSPICIOUS_TRANSACTIONS (EXASOL ANSI SQL)</span>
+            <button class="btn btn-secondary btn-sm" onclick="copyActiveSql()">
+              📋 Copy SQL
+            </button>
+          </div>
+          <pre class="code-pre"><code id="sqlCodeDisplay">-- SQL Code will be displayed here</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 5: ARCHITECTURE & PROJECT OVERVIEW -->
+    <section id="tabArch" class="tab-content">
+      <div class="arch-grid">
+        <div class="arch-card">
+          <span class="arch-step-badge">Phase 1: Ingestion</span>
+          <h3 style="font-size: 1.1rem; margin-bottom: 8px;">TRANSACTIONS Table</h3>
+          <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.6;">
+            Raw ledger records containing <code>TRANSACTION_ID</code>, <code>ACCOUNT_ID</code>, <code>AMOUNT</code>, <code>TRANSACTION_TIME</code>, and <code>MERCHANT</code>. Uses primary key constraints and idempotent DDL.
+          </p>
+        </div>
+
+        <div class="arch-card">
+          <span class="arch-step-badge">Phase 2: In-Memory Windowing</span>
+          <h3 style="font-size: 1.1rem; margin-bottom: 8px;">Analytic Window Functions</h3>
+          <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.6;">
+            Leverages Exasol's columnar in-memory calculation engine. Window partitions evaluate duplicate billing and daily transaction velocity simultaneously without costly table self-joins or slow procedural loops.
+          </p>
+        </div>
+
+        <div class="arch-card">
+          <span class="arch-step-badge">Phase 3: Composite Scoring</span>
+          <h3 style="font-size: 1.1rem; margin-bottom: 8px;">Risk Scoring & Concatenation</h3>
+          <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.6;">
+            Rule weights sum to a holistic score (0-100). Concatenates all active heuristic flags into plain-language audit trails, preventing secondary triggers from being masked by single CASE statements.
+          </p>
+        </div>
+      </div>
+
+      <!-- Slide Details from Presentation -->
+      <div class="panel-card" style="margin-top: 24px;">
+        <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+          <span>🎓</span> Project Presentation Details (TransactionGuard.pptx)
+        </h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; font-size: 0.85rem;">
+          <div style="background: rgba(0,0,0,0.3); padding: 14px; border-radius: var(--radius-sm);">
+            <div style="color: var(--text-dim); text-transform: uppercase; font-size: 0.72rem;">Track & Challenge</div>
+            <div style="font-weight: 600; color: #38bdf8; margin-top: 4px;">Money, Risk & Regulation</div>
+            <div style="color: var(--text-muted); margin-top: 2px;">Exasol In-Memory Analytic Database</div>
+          </div>
+          <div style="background: rgba(0,0,0,0.3); padding: 14px; border-radius: var(--radius-sm);">
+            <div style="color: var(--text-dim); text-transform: uppercase; font-size: 0.72rem;">Institution</div>
+            <div style="font-weight: 600; color: #38bdf8; margin-top: 4px;">Easwari Engineering College</div>
+            <div style="color: var(--text-muted); margin-top: 2px;">Department of Information Technology</div>
+          </div>
+          <div style="background: rgba(0,0,0,0.3); padding: 14px; border-radius: var(--radius-sm);">
+            <div style="color: var(--text-dim); text-transform: uppercase; font-size: 0.72rem;">Project Authors</div>
+            <div style="font-weight: 600; color: #38bdf8; margin-top: 4px;">Sindhureny S, Yashwanthiga G, TarunShree M</div>
+            <div style="color: var(--text-muted); margin-top: 2px;">Core SQL & Engine Developers</div>
+          </div>
+        </div>
+
+        <div style="margin-top: 18px; padding: 14px; background: rgba(56, 189, 248, 0.05); border: 1px solid var(--border-accent); border-radius: var(--radius-sm); font-size: 0.82rem; color: var(--text-muted);">
+          <strong style="color: #38bdf8;">Compliance Notice:</strong> Flagging a transaction for <code>REVIEW</code> is an automated prioritization heuristic, not definitive proof of fraud. Human compliance officers conduct final adjudication following bank regulations.
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <div>
+        <strong>Transaction Guard</strong> © 2026. Released under the <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener noreferrer">MIT License</a>.
+      </div>
+      <div>
+        Built with Exasol Personal OLAP & ANSI SQL Window Functions | <a href="https://github.com/Sindhureny/transaction_guard" target="_blank" rel="noopener noreferrer">View on GitHub</a>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Heuristic Detail Modal (<dialog>) -->
+  <dialog id="inspectorModal" class="detail-modal">
+    <div class="modal-header">
+      <h3 style="font-size: 1rem; font-weight: 600;" id="modalTxnId">Transaction Inspection</h3>
+      <button class="close-btn" onclick="closeInspector()" aria-label="Close dialog">✕</button>
+    </div>
+    <div class="modal-body" id="modalDetailsBody">
+      <!-- Injected by app.js -->
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary btn-sm" onclick="closeInspector()">Close</button>
+    </div>
+  </dialog>
+
+  <!-- Toast Notification -->
+  <div id="toastNotice" class="toast-notice" role="alert">
+    <span>🛡️</span>
+    <span class="toast-msg">Operation completed</span>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
