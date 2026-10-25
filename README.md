@@ -1,6 +1,7 @@
 # 🛡️ Transaction Guard
 
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-Online%20Dashboard-success?style=for-the-badge&logo=google-chrome&logoColor=white)](https://sindhureny.github.io/transaction_guard/)
+[![Demo Video](https://img.shields.io/badge/Demo%20Video-Watch%20Walkthrough-red?style=for-the-badge&logo=google-drive&logoColor=white)](https://drive.google.com/file/d/1MgY-Qg6QdmKEHT4E20H-TFEcHL1sKirj/view?usp=sharing)
 [![CI](https://github.com/Sindhureny/transaction_guard/actions/workflows/ci.yml/badge.svg)](https://github.com/Sindhureny/transaction_guard/actions/workflows/ci.yml)
 [![Pages Deployment](https://github.com/Sindhureny/transaction_guard/actions/workflows/pages.yml/badge.svg)](https://github.com/Sindhureny/transaction_guard/actions/workflows/pages.yml)
 [![Database](https://img.shields.io/badge/Database-Exasol%20In--Memory%20OLAP-007ACC?style=flat&logo=database)](https://www.exasol.com/)
@@ -11,6 +12,10 @@
 > 🌐 **Live Interactive Web Application**:  
 > Experience real-time suspicious transaction scoring, scenario sandbox simulation, and Exasol SQL analytics directly in your browser:  
 > 👉 **[https://sindhureny.github.io/transaction_guard/](https://sindhureny.github.io/transaction_guard/)**
+> 
+> 🎬 **Project Walkthrough & Video Demonstration**:  
+> Watch the complete live screen-recording walkthrough and engine demonstration:  
+> 👉 **[Watch Video Demonstration (Google Drive)](https://drive.google.com/file/d/1MgY-Qg6QdmKEHT4E20H-TFEcHL1sKirj/view?usp=sharing)**
 
 **Transaction Guard** is an in-memory SQL detection engine built for **Exasol** (and standard ANSI SQL engines) to identify, score, and prioritize suspicious financial transactions.
 
@@ -33,6 +38,17 @@ Transaction Guard monitors incoming ledger data against three core fraud heurist
 * **HIGH (Score ≥ 35)**: High-value single transaction or suspected duplicate charge.
 * **MEDIUM (Score ≥ 25)**: Rapid card velocity or repeated daily activity.
 * **LOW / NORMAL (Score = 0)**: Standard benign transaction cleared for straight-through processing (`NORMAL`).
+
+---
+
+## 🎥 Video Demonstration
+
+A full project screen-recording walkthrough detailing the in-memory SQL heuristics, live dashboard, scenario sandbox simulation, and Exasol architecture:
+
+[![Watch Transaction Guard Demo Video](https://img.shields.io/badge/▶%20Watch%20Full%20Demo%20Video-Google%20Drive-red?style=for-the-badge&logo=google-drive&logoColor=white)](https://drive.google.com/file/d/1MgY-Qg6QdmKEHT4E20H-TFEcHL1sKirj/view?usp=sharing)
+
+> 📹 **Direct Video Link**: [Click here to watch the demonstration on Google Drive](https://drive.google.com/file/d/1MgY-Qg6QdmKEHT4E20H-TFEcHL1sKirj/view?usp=sharing)  
+> *Duration: Video demonstration showcasing live transaction flagging, window heuristic inspection, and risk analytics.*
 
 ---
 
